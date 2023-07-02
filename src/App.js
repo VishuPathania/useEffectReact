@@ -1,42 +1,79 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import Header from './components/Header';
+import ProductForm from './components/ProductForm';
+import ProductList from './components/ProductList';
 
-import Login from "./components/Login/Login";
-import Home from "./components/Home/Home";
-import MainHeader from "./components/MainHeader/MainHeader";
-
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+const App = () => {
+  const [products, setProducts] = useState({});
 
   useEffect(() => {
-    const storedUserLoggedInInformation = localStorage.getItem("isLoggedIn");
-    if (storedUserLoggedInInformation === "1") {
-      setIsLoggedIn("true");
+    const storedProducts = localStorage.getItem('products');
+    if (storedProducts) {
+      setProducts(JSON.parse(storedProducts));
     }
   }, []);
 
-  const loginHandler = (email, password) => {
-    // We should of course check email and password
-    // But it's just a dummy/ demo anyways
-    localStorage.setItem("isLoggedIn", "1");
-    setIsLoggedIn(true);
+  const handleAddProduct = (product) => {
+    setProducts((prevProducts) => {
+      const categoryProducts = { ...prevProducts[product.category] };
+      categoryProducts[product.id] = product;
+
+      const updatedProducts = {
+        ...prevProducts,
+        [product.category]: categoryProducts,
+      };
+
+      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      return updatedProducts;
+    });
   };
 
-  const logoutHandler = () => {
-    localStorage.removeItem('isLoggedIn');
-    setIsLoggedIn(false);
+  const handleDeleteProduct = (category, productId) => {
+    setProducts((prevProducts) => {
+      const categoryProducts = { ...prevProducts[category] };
+      delete categoryProducts[productId];
+
+      const updatedProducts = {
+        ...prevProducts,
+        [category]: categoryProducts,
+      };
+
+      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      return updatedProducts;
+    });
   };
 
   return (
-    <React.Fragment>
-      <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
-      <main>
-        {!isLoggedIn && <Login onLogin={loginHandler} />}
-        {isLoggedIn && <Home onLogout={logoutHandler} />}
-      </main>
-      
-    </React.Fragment>
+    <div>
+      <Header />
+      <ProductForm onAddProduct={handleAddProduct} />
+      <h2>Product List</h2>
+      <div>
+        <h3>Electronics</h3>
+        <ProductList
+          category="Electronics"
+          products={products}
+          onDeleteProduct={handleDeleteProduct}
+        />
+      </div>
+      <div>
+        <h3>Food</h3>
+        <ProductList
+          category="Food"
+          products={products}
+          onDeleteProduct={handleDeleteProduct}
+        />
+      </div>
+      <div>
+        <h3>Skincare</h3>
+        <ProductList
+          category="Skincare"
+          products={products}
+          onDeleteProduct={handleDeleteProduct}
+        />
+      </div>
+    </div>
   );
-}
+};
 
 export default App;
-
